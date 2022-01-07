@@ -4,6 +4,7 @@ import tempfile
 from BEN_MattingMethod import UnetSegmentation as unet 
 from BEN_MattingMethod import robustMatting as robust 
 from BEN_MattingMethod import mediapipe 
+from BEN_MattingMethod import modNet 
 optionOutput = []
 
 #st.title('BACKGROUND MATTING')
@@ -26,10 +27,10 @@ def unetSegmentation(source, background):
     matting = None 
     return source, alpha, matting 
 
-def modNet(source, background): 
-    alpha = None 
-    matting = None 
-    return source, alpha, matting 
+#def modNet(source, background): 
+#    alpha = None 
+#    matting = None 
+#    return source, alpha, matting 
 
 def mediapipeMatting(source, background): 
     alpha = None  
@@ -54,7 +55,8 @@ def chooseMethod (optionMethod,background):
         model = robust(background)
         return model 
     elif optionMethod == "ModNet": 
-        return modNet(source, background )
+        model = modNet(background)
+        return model  
     elif optionMethod == "Mediapipe Matting": 
         model = mediapipe(background)
         return model 
@@ -155,11 +157,14 @@ if st.sidebar.checkbox('I agree above setting'):
                     alpha, matting = model.imageMatting(frame)
                     source = frame.copy()
                     source = cv2.cvtColor(source, cv2.COLOR_BGR2RGB)                       
-                    if method == "Mediapipe Matting":
+                    if method == "Mediapipe Matting" or method == "ModNet":
                         pass 
                     else :
-                        alpha = cv2.cvtColor(alpha, cv2.COLOR_BGR2RGB)                       
-                    matting = cv2.cvtColor(matting, cv2.COLOR_BGR2RGB)                       
+                        alpha = cv2.cvtColor(alpha, cv2.COLOR_BGR2RGB)     
+                    if method == "ModNet": 
+                        pass
+                    else:
+                        matting = cv2.cvtColor(matting, cv2.COLOR_BGR2RGB)                       
                     cv2.imwrite("matting.png",matting)
                     print ( "done1" )
     
@@ -204,11 +209,14 @@ if st.sidebar.checkbox('I agree above setting'):
                 source = image.copy()
                 alpha, matting = model.imageMatting(image)
                 source = cv2.cvtColor(source, cv2.COLOR_BGR2RGB)                       
-                if method == "Mediapipe Matting":
+                if method == "Mediapipe Matting" or method =="ModNet":
                     pass 
                 else :
                     alpha = cv2.cvtColor(alpha, cv2.COLOR_BGR2RGB)                       
-                matting = cv2.cvtColor(matting, cv2.COLOR_BGR2RGB)                       
+                if method == "ModNet": 
+                    pass 
+                else:
+                    matting = cv2.cvtColor(matting, cv2.COLOR_BGR2RGB)                       
     
                 if len (optionOutput) == 3:
                     i1 = optionOutput[0].index(" ")
