@@ -1,8 +1,9 @@
 import streamlit as st
 import cv2
 import tempfile
-from BEN_Unet import UnetSegmentation as unet 
-from BEN_Unet import robustMatting as robust 
+from BEN_MattingMethod import UnetSegmentation as unet 
+from BEN_MattingMethod import robustMatting as robust 
+from BEN_MattingMethod import mediapipe 
 optionOutput = []
 
 #st.title('BACKGROUND MATTING')
@@ -55,7 +56,8 @@ def chooseMethod (optionMethod,background):
     elif optionMethod == "ModNet": 
         return modNet(source, background )
     elif optionMethod == "Mediapipe Matting": 
-        return mediapipeMatting(source, background) 
+        model = mediapipe(background)
+        return model 
     elif optionMethod == "P3MNet":
         return P3MNet(source, background) 
     elif optionMethod == "GFMNet": 
@@ -153,7 +155,10 @@ if st.sidebar.checkbox('I agree above setting'):
                     alpha, matting = model.imageMatting(frame)
                     source = frame.copy()
                     source = cv2.cvtColor(source, cv2.COLOR_BGR2RGB)                       
-                    alpha = cv2.cvtColor(alpha, cv2.COLOR_BGR2RGB)                       
+                    if method == "Mediapipe Matting":
+                        pass 
+                    else :
+                        alpha = cv2.cvtColor(alpha, cv2.COLOR_BGR2RGB)                       
                     matting = cv2.cvtColor(matting, cv2.COLOR_BGR2RGB)                       
                     cv2.imwrite("matting.png",matting)
                     print ( "done1" )
@@ -199,7 +204,10 @@ if st.sidebar.checkbox('I agree above setting'):
                 source = image.copy()
                 alpha, matting = model.imageMatting(image)
                 source = cv2.cvtColor(source, cv2.COLOR_BGR2RGB)                       
-                alpha = cv2.cvtColor(alpha, cv2.COLOR_BGR2RGB)                       
+                if method == "Mediapipe Matting":
+                    pass 
+                else :
+                    alpha = cv2.cvtColor(alpha, cv2.COLOR_BGR2RGB)                       
                 matting = cv2.cvtColor(matting, cv2.COLOR_BGR2RGB)                       
     
                 if len (optionOutput) == 3:
