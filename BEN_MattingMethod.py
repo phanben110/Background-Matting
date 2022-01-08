@@ -248,7 +248,7 @@ class modNet():
 
 class P3MNet():
     def __init__(self,background): 
-        self.background = cv2.cvtColor(background, cv2.COLOR_BGR2RGB)  
+        self.background = background  
         self.pathModel = 'modules/P3M/models/pretrained/p3mnet_pretrained_on_p3m10k.pth' 
         self.model = P3mNet()
         if torch.cuda.device_count()==0:
@@ -256,9 +256,9 @@ class P3MNet():
             ckpt = torch.load(self.pathModel, map_location=torch.device('cpu'))
             self.cuda= False 
         else:
-            print(f'Running on GPU with CUDA as {args.cuda}...')
-            ckpt = torch.load(self.pathModel)
             self.cuda = True
+            print(f'Running on GPU with CUDA as {self.cuda}...')
+            ckpt = torch.load(self.pathModel)
         self.model.load_state_dict(ckpt['state_dict'], strict=True)
         if self.cuda:
             self.model = self.model.cuda()
@@ -305,12 +305,23 @@ class P3MNet():
         with torch.no_grad():
             if self.cuda:
                 torch.cuda.empty_cache()
-            predict = self.inference_img(img)*255.0
+            alpha = self.inference_img(img)
 
-        composite = generate_composite_img(img, predict)
-        predict = cv2.resize(predict, (w, h), interpolation=cv2.INTER_LINEAR)
-        predict = predict*255.0
-        return predict.astype(np.uint8), composite
+        #composite = generate_composite_img(img, predict)
+        #alpha = cv2.resize(alpha, (w, h), interpolation=cv2.INTER_LINEAR)
+        alpha = alpha*255.0
+
+        alpha = alpha.astype('float32')
+        
+        alpha = cv2.cvtColor(alpha,cv2.COLOR_GRAY2BGR)/255
+        self.background = resizeBacground(alpha, self.background)
+        matting = alpha*source + (1-alpha)*self.background
+        matting = matting.astype('float32')
+        cv2.imwrite("alpha.png", alpha*255) 
+        cv2.imwrite("matting.png", matting)
+        cv2.imwrite("source.png", source)
+
+        return alpha*255.0, matting
 
 
 
@@ -325,11 +336,11 @@ class P3MNet():
         new_w = min(MAX_SIZE_W, resize_w - (resize_w % 32))
         scale_img = resize(img,(new_h,new_w))*255.0
         pred_global, pred_local, pred_fusion = self.inference_once(scale_img)
-        pred_local = resize(pred_local,(h,w))
-        pred_global = resize(pred_global,(h,w))*255.0
-        cv2.imwrite("pred_global.png",pred_global)
-        cv2.imwrite("alpha.png",pred_global*pred_local*255)
-        cv2.imwrite("pred_fusion.png",pred_local*255)
+        #pred_local = resize(pred_local,(h,w))
+        #pred_global = resize(pred_global,(h,w))*255.0
+        #cv2.imwrite("pred_global.png",pred_global)
+        #cv2.imwrite("alpha.png",pred_global*pred_local*255)
+        #cv2.imwrite("pred_fusion.png",pred_local*255)
         pred_fusion = resize(pred_fusion,(h,w))
         return pred_fusion
 
@@ -337,10 +348,17 @@ class P3MNet():
 
 
 
-background = cv2.imread('background/2.jpg')
-source = cv2.imread('/home/pcwork/Desktop/ben.jpg')
+background = cv2.imread('/home/pcwork/ai/ftech/finger/handGestureWithMatting/background/0.jpg'  )
+source = cv2.imread('/home/pcwork/ai/ftech/finger/handGestureWithMatting/modules/P3M/samples/original/p_015cd10e.jpg'  )
 #
 ben = P3MNet(background) 
+alpha, matting = ben.imageMatting(source) 
+
+#image = cv2.add(matting, background)
+
+cv2.imwrite("Ben222.png", matting)
+cv2.imwrite("alpha1.png", alpha)
+
 #ben = robustMatting(background) 
 #alpha, matting = ben.imageMatting(source) 
 #cv2.imwrite("Ben222.png", matting)
@@ -348,8 +366,6 @@ ben = P3MNet(background)
 #alpha, matting = ben.imageMatting(source) 
 #ben = modNet(background) 
 #alpha, matting = ben.imageMatting(source) 
-#cv2.imwrite("Ben222.png", matting)
-#cv2.imwrite("alpha.png", alpha)
 
 
 

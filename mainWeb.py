@@ -4,11 +4,20 @@ import tempfile
 from BEN_MattingMethod import UnetSegmentation as unet 
 from BEN_MattingMethod import robustMatting as robust 
 from BEN_MattingMethod import mediapipe 
-from BEN_MattingMethod import modNet 
+from BEN_MattingMethod import modNet
+from BEN_MattingMethod import P3MNet 
+from BEN_footer import footer
 optionOutput = []
 
 #st.title('BACKGROUND MATTING')
-st.markdown(f"<h1 style='text-align: center; color: blue;'>Background Matting</h1>", unsafe_allow_html=True)
+#st.markdown(f"<h1 style='text-align: center; color: blue;'>Background Matting</h1>", unsafe_allow_html=True)
+#st.set_page_config(page_title="BenPhan", page_icon=”🖖”)
+st.set_page_config(page_title="Ben Phan", page_icon="🖖")
+st.image("ftech3.jpg")
+
+
+
+
 
 st.sidebar.image("logoFtech.png", use_column_width=True)
 optionOutput = st.sidebar.multiselect(
@@ -37,10 +46,10 @@ def mediapipeMatting(source, background):
     matting = None 
     return source, alpha, matting 
 
-def P3MNet (source, background): 
-    alpha = None 
-    matting = None 
-    return source, alpha, matting 
+#def P3MNet (source, background): 
+#    alpha = None 
+#    matting = None 
+#    return source, alpha, matting 
 
 def GFMNet (source, background): 
     alpha = None 
@@ -61,7 +70,8 @@ def chooseMethod (optionMethod,background):
         model = mediapipe(background)
         return model 
     elif optionMethod == "P3MNet":
-        return P3MNet(source, background) 
+        model = P3MNet(background)
+        return model
     elif optionMethod == "GFMNet": 
         return GFMNet(source, background) 
 
@@ -70,29 +80,29 @@ if len(optionOutput) == 3 :
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        st.caption(optionOutput[0])
+        st.text(optionOutput[0])
         #st.markdown(f"<h1 style='text-align: center; color: red;'>{optionOutput[0]}</h1>", unsafe_allow_html=True)
         stframe1 = st.empty()          
     
     with col2:
-        st.caption(optionOutput[1])
+        st.text(optionOutput[1])
         stframe2 = st.empty()          
     
     with col3:
-        st.caption(optionOutput[2])
+        st.text(optionOutput[2])
         stframe3 = st.empty()          
 elif len(optionOutput) == 2 :
     col1, col2 = st.columns(2) 
 
     with col1: 
-        st.caption(optionOutput[0])
+        st.text(optionOutput[0])
         stframe1 = st.empty() 
     with col2: 
-        st.caption(optionOutput[1])
+        st.text(optionOutput[1])
         stframe2 = st.empty()
 else :                    
     try:
-        st.caption(optionOutput[1])
+        st.text(optionOutput[1])
         col1 = st.columns(1) 
         stframe1 = st.empty()
     except: 
@@ -106,6 +116,8 @@ method = st.sidebar.selectbox(
      'Which method do you want to use?',
      ('None','Unet Segmentation','Robust Matting','ModNet','Mediapipe Matting','P3MNet','GFMNet'))
 
+if method != "None":
+    st.text(f"* Use the {method} method")
 
 
 option = st.sidebar.selectbox(
@@ -165,8 +177,6 @@ if st.sidebar.checkbox('I agree above setting'):
                         pass
                     else:
                         matting = cv2.cvtColor(matting, cv2.COLOR_BGR2RGB)                       
-                    cv2.imwrite("matting.png",matting)
-                    print ( "done1" )
     
                     if len (optionOutput) == 3:
                         i1 = optionOutput[0].index(" ")
@@ -175,22 +185,39 @@ if st.sidebar.checkbox('I agree above setting'):
                         frame1 = optionOutput[0][i1+1:]
                         frame2 = optionOutput[1][i2+1:]
                         frame3 = optionOutput[2][i3+1:]
-                        stframe1.image(eval(frame1))         
-                        stframe2.image(eval(frame2))         
-                        stframe3.image(eval(frame3))         
+                        if method == "P3MNet":
+                            stframe1.image(f"{frame1}.png")          
+                            stframe2.image(f"{frame2}.png")          
+                            stframe3.image(f"{frame3}.png")          
+                        else:
+                            stframe1.image(eval(frame1))          
+                            stframe2.image(eval(frame2))          
+                            stframe3.image(eval(frame3))          
+
                     elif len ( optionOutput ) == 2 : 
                         i1 = optionOutput[0].index(" ")
                         i2 = optionOutput[1].index(" ")
                         frame1 = optionOutput[0][i1+1:]
                         frame2 = optionOutput[1][i2+1:]
-                        stframe1.image(eval(frame1))         
-                        stframe2.image(eval(frame2))         
+                        if method == "P3MNet":
+                            stframe1.image(f"{frame1}.png")          
+                            stframe2.image(f"{frame2}.png")          
+                        else:
+                            stframe1.image(eval(frame1))         
+                            stframe2.image(eval(frame2))         
+
                     elif len (optionOutput) == 1 : 
                         i1 = optionOutput[0].index(" ")
                         frame1 = optionOutput[0][i1+1:]
-                        stframe1.image(eval(frame1))         
+                        if method == "P3MNet":
+                            stframe1.image(f"{frame1}.png")          
+                        else:
+                            stframe1.image(eval(frame1))         
                     else :
-                        stframe1.image(matting)
+                        if method == "P3MNet":
+                            stframe1.image("matting.png")          
+                        else:
+                            stframe1.image(matting)
                         
                     print ( "done1" )
     
@@ -217,7 +244,9 @@ if st.sidebar.checkbox('I agree above setting'):
                     pass 
                 else:
                     matting = cv2.cvtColor(matting, cv2.COLOR_BGR2RGB)                       
-    
+
+
+
                 if len (optionOutput) == 3:
                     i1 = optionOutput[0].index(" ")
                     i2 = optionOutput[1].index(" ")
@@ -225,22 +254,75 @@ if st.sidebar.checkbox('I agree above setting'):
                     frame1 = optionOutput[0][i1+1:]
                     frame2 = optionOutput[1][i2+1:]
                     frame3 = optionOutput[2][i3+1:]
-                    stframe1.image(eval(frame1))          
-                    stframe2.image(eval(frame2))          
-                    stframe3.image(eval(frame3))          
+                    if method == "P3MNet":
+                        stframe1.image(f"{frame1}.png")   
+                        stframe2.image(f"{frame2}.png")   
+                        stframe3.image(f"{frame3}.png")   
+                    else:
+                        stframe1.image(eval(frame1))      
+                        stframe2.image(eval(frame2))      
+                        stframe3.image(eval(frame3))      
+                
                 elif len ( optionOutput ) == 2 : 
                     i1 = optionOutput[0].index(" ")
                     i2 = optionOutput[1].index(" ")
                     frame1 = optionOutput[0][i1+1:]
                     frame2 = optionOutput[1][i2+1:]
-                    stframe1.image(eval(frame1))          
-                    stframe2.image(eval(frame2))          
+                    if method == "P3MNet":
+                        stframe1.image(f"{frame1}.png")   
+                        stframe2.image(f"{frame2}.png")   
+                    else:
+                        stframe1.image(eval(frame1))      
+                        stframe2.image(eval(frame2))      
+                
                 elif len (optionOutput) == 1 : 
                     i1 = optionOutput[0].index(" ")
                     frame1 = optionOutput[0][i1+1:]
-                    stframe1.image(eval(frame1))          
+                    if method == "P3MNet":
+                        stframe1.image(f"{frame1}.png")   
+                    else:
+                        stframe1.image(eval(frame1))      
                 else :
-                    stframe1.image(matting)
+                    if method == "P3MNet":
+                        stframe1.image("matting.png")   
+                    else:
+                        stframe1.image(matting)
+                    
+                print ( "done1" )
+     
+     
+
+    
+                #if len (optionOutput) == 3:
+                #    i1 = optionOutput[0].index(" ")
+                #    i2 = optionOutput[1].index(" ")
+                #    i3 = optionOutput[2].index(" ")
+                #    frame1 = optionOutput[0][i1+1:]
+                #    frame2 = optionOutput[1][i2+1:]
+                #    frame3 = optionOutput[2][i3+1:]
+                #    if method == "P3MNet":
+                #        stframe1.image(f"{frame1}.png")          
+                #        stframe2.image(f"{frame2}.png")          
+                #        stframe3.image(f"{frame3}.png")          
+                #    else:
+                #        stframe1.image(eval(frame1))          
+                #        stframe2.image(eval(frame2))          
+                #        stframe3.image(eval(frame3))          
+
+
+                #elif len ( optionOutput ) == 2 : 
+                #    i1 = optionOutput[0].index(" ")
+                #    i2 = optionOutput[1].index(" ")
+                #    frame1 = optionOutput[0][i1+1:]
+                #    frame2 = optionOutput[1][i2+1:]
+                #    stframe1.image(eval(frame1))          
+                #    stframe2.image(eval(frame2))          
+                #elif len (optionOutput) == 1 : 
+                #    i1 = optionOutput[0].index(" ")
+                #    frame1 = optionOutput[0][i1+1:]
+                #    stframe1.image(eval(frame1))          
+                #else :
+                #    stframe1.image(matting)
     
     
     
